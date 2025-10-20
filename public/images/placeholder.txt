@@ -1,0 +1,12 @@
+Please export the following images from Figma and place them in this folder:
+
+1. hero-phone-mockup.png - The phone mockup showing the app interface
+2. phone-mockup-2.png - The single phone mockup in the middle section
+3. mobile-app-preview.png - The phone mockup in the "Your court case always in your pocket" section
+
+To export from Figma:
+1. Open the Figma file
+2. Select each image/frame
+3. Click "Export" in the right panel
+4. Choose PNG format
+5. Click "Export" and save to this folder
