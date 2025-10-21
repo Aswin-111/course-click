@@ -191,15 +191,15 @@ export default function LandingTestimonialsSection({
                 >
                   <div className="space-y-4 py-4">
                     {allTestimonials.map((t, idx) => (
-                      <TestimonialCard
-                        key={`${t.id}-${idx}`}
-                        name={t.name}
-                        title={t.title}
-                        testimonial={t.quote || t.testimonial}
-                        rating={t.rating}
-                        image={t.avatar || t.image}
-                      />
-                    ))}
+  <TestimonialCard
+    key={`${t.id}-${idx}`}
+    name={t.name}
+    title={t.title}
+    testimonial={t.quote}
+    rating={t.rating}
+    image={t.avatar}
+  />
+))}
                   </div>
                 </div>
                 {/* Bottom fade */}

@@ -41,30 +41,26 @@ export const slideUp = {
  */
 export function Reveal({
   children,
-  as: Tag = "div",
   variants = slideUp,
   once = true,
   amount = 0.2,
   margin = "-15% 0px -15% 0px",
   ...props
 }: React.ComponentProps<typeof motion.div> & {
-  as?: React.ElementType;
   variants?: any;
   once?: boolean;
   amount?: number;
   margin?: string;
 }) {
-  const ref = React.useRef<HTMLElement | null>(null);
-  const isInView = useInView(ref, { once, amount, margin });
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const isInView = useInView(ref, { once, amount, margin: margin as any });
 
   return (
     <motion.div
       ref={ref}
-      as={Tag}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
       variants={variants}
-      // Note: transition is now defined within variants for better control
       style={{ willChange: "transform, opacity" }}
       {...props}
     >
@@ -72,6 +68,7 @@ export function Reveal({
     </motion.div>
   );
 }
+
 
 /**
  * A container that staggers the animation of its direct children.
@@ -94,7 +91,8 @@ export function Stagger({
   margin?: string;
 }) {
   const ref = React.useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once, amount, margin });
+const isInView = useInView(ref, { once, amount, margin: margin as any });
+
   return (
     <motion.div
       ref={ref}

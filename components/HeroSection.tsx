@@ -100,7 +100,20 @@ export default function HeroSection() {
             </motion.div>
 
             {/* Heading */}
-            <motion.div className="mt-8 w-full max-w-[569px]" variants={item}>
+            {/* Heading */}
+<motion.h1
+  className={`${urbanist.className} text-[48px] leading-[60px] tracking-tight text-[#11060C] font-extralight mt-8 w-full max-w-[569px]`}
+  variants={item}                 // or slideUp if you prefer that curve
+  initial="hidden"
+  whileInView="show"
+  viewport={{ amount: 0.2, once: false }}
+>
+  Manage Your Legal Journey
+  <br />
+  <span className="font-bold">Anywhere, Anytime</span>
+</motion.h1>
+
+            {/* <motion.div className="mt-8 w-full max-w-[569px]" variants={item}>
               <Reveal
                 once={false}
                 as="h1"
@@ -110,7 +123,7 @@ export default function HeroSection() {
                 <br />
                 <span className="font-bold">Anywhere, Anytime</span>
               </Reveal>
-            </motion.div>
+            </motion.div> */}
 
             {/* Paragraph */}
             <motion.div variants={item}>
