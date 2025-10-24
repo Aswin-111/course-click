@@ -61,6 +61,50 @@ interface LandingTestimonialsSectionProps {
   stats?: StatType[]
 }
 
+/** Hover wobble wrapper (adds motion only, no style changes to children) */
+function WobbleOnHover({ children }: { children: React.ReactNode }) {
+  const [hover, setHover] = useState(false)
+  const [amp, setAmp] = useState<number | null>(null)
+  const [dur, setDur] = useState<number | null>(null)
+
+  useEffect(() => {
+    // run after mount to avoid SSR randomness
+    const r = Math.random
+    setAmp(Math.round((4 + (10 - 4) * r()) * 10) / 10)         // 4..10px
+    setDur(Math.round((0.9 + (1.4 - 0.9) * r()) * 100) / 100)  // 0.9..1.4s
+  }, [])
+
+  const animate = hover && amp != null ? { y: [0, -amp, 0, amp, 0] } : { y: 0 }
+  const transition = hover && dur != null ? { duration: dur, ease: 'easeInOut', repeat: Infinity } : undefined
+
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ willChange: 'transform' }}
+    >
+      {/* use a lightweight inline animation via CSS variables to avoid altering children */}
+      <div style={{
+        transform: animate.y ? undefined : 'translateY(0px)',
+        animation: animate.y ? `wobble ${dur}s ease-in-out infinite` : undefined,
+        // custom prop for amplitude
+        ['--amp' as any]: amp ? `${amp}px` : '0px',
+      }}>
+        {children}
+      </div>
+      <style jsx>{`
+        @keyframes wobble {
+          0%   { transform: translateY(0); }
+          25%  { transform: translateY(calc(var(--amp) * -1)); }
+          50%  { transform: translateY(0); }
+          75%  { transform: translateY(var(--amp)); }
+          100% { transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 export default function LandingTestimonialsSection({
   testimonials = fallbackTestimonials,
   stats = fallbackStats,
@@ -72,7 +116,15 @@ export default function LandingTestimonialsSection({
 
   useEffect(() => {
     const el = scrollRef.current
-    if (!el || !isScrolling) return
+    if (!el) return
+
+    // Respect reduced-motion
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReduced || !isScrolling) return
 
     let raf = 0
     const speed = 0.5 // Medium speed
@@ -80,7 +132,6 @@ export default function LandingTestimonialsSection({
     const tick = () => {
       if (!el) return
       el.scrollTop += speed
-      // Reset at half for an infinite loop
       if (el.scrollTop >= el.scrollHeight / 2) el.scrollTop = 0
       raf = requestAnimationFrame(tick)
     }
@@ -121,7 +172,7 @@ export default function LandingTestimonialsSection({
               </div>
             </Reveal>
 
-            {/* Divider (matches design asset, optional) */}
+            {/* Divider */}
             <Reveal once={false}>
               <img
                 src="/images/horizontal-divider.svg"
@@ -148,6 +199,12 @@ export default function LandingTestimonialsSection({
                         src={testimonials[0].avatar}
                         alt={testimonials[0].name}
                         className="w-[48px] h-[48px] rounded-full object-cover"
+                        onError={(e) => {
+                          const t = e.currentTarget
+                          t.onerror = null
+                          t.src =
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='24' fill='%23EDE8EB'/%3E%3C/svg%3E"
+                        }}
                       />
                       <div className="flex flex-col gap-1">
                         <p className="text-[#11060c] text-[18px] font-bold font-urbanist">
@@ -176,7 +233,8 @@ export default function LandingTestimonialsSection({
             <Reveal once={false}>
               <div className="relative h-[536px] overflow-hidden">
                 {/* Top fade */}
-                <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-12"
+                <div
+                  className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-12"
                   style={{
                     background:
                       'linear-gradient(180deg, rgba(245,245,245,1) 0%, rgba(245,245,245,0) 100%)',
@@ -191,19 +249,21 @@ export default function LandingTestimonialsSection({
                 >
                   <div className="space-y-4 py-4">
                     {allTestimonials.map((t, idx) => (
-  <TestimonialCard
-    key={`${t.id}-${idx}`}
-    name={t.name}
-    title={t.title}
-    testimonial={t.quote}
-    rating={t.rating}
-    image={t.avatar}
-  />
-))}
+                      <WobbleOnHover key={`${t.id}-${idx}`}>
+                        <TestimonialCard
+                          name={t.name}
+                          title={t.title}
+                          testimonial={t.quote}
+                          rating={t.rating}
+                          image={t.avatar}
+                        />
+                      </WobbleOnHover>
+                    ))}
                   </div>
                 </div>
                 {/* Bottom fade */}
-                <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-12"
+                <div
+                  className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-12"
                   style={{
                     background:
                       'linear-gradient(180deg, rgba(245,245,245,0) 0%, rgba(245,245,245,1) 100%)',
@@ -216,46 +276,66 @@ export default function LandingTestimonialsSection({
 
         {/* ================= Bottom Stats ================= */}
         <div className="mt-16 flex flex-col gap-16">
-          {/* Divider (matches design asset, optional) */}
+          {/* Divider */}
           <Reveal once={false}>
             <img src="/images/bottom-divider.svg" alt="" className="w-full h-[1px]" />
           </Reveal>
 
           <Reveal once={false}>
-            <div className="flex items-center justify-center gap-28">
-              {stats.map((stat, i) => (
-                <div key={i} className="flex items-center gap-28">
-                  <div className="flex flex-col gap-3 items-center">
-                    <h3
-                      className="text-[48px] font-semibold font-inter"
-                      style={{
-                        background:
-                          'linear-gradient(180.65deg, rgba(80,34,60,1) 0.75%, rgba(37,2,31,1) 160.02%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }}
-                    >
-                      {stat.value}
-                    </h3>
-                    <p className="text-[#555555] text-[18px] font-semibold font-urbanist text-center">
-                      {stat.label}
-                    </p>
+            {/* scale wrapper keeps your exact styles but fits narrow screens */}
+            <div className="stats-scale">
+              <div className="flex items-center justify-center gap-28">
+                {stats.map((stat, i) => (
+                  <div key={i} className="flex items-center gap-28">
+                    <div className="flex flex-col gap-3 items-center">
+                      <h3
+                        className="text-[48px] font-semibold font-inter"
+                        style={{
+                          background:
+                            'linear-gradient(180.65deg, rgba(80,34,60,1) 0.75%, rgba(37,2,31,1) 160.02%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                        }}
+                      >
+                        {stat.value}
+                      </h3>
+                      <p className="text-[#555555] text-[18px] font-semibold font-urbanist text-center">
+                        {stat.label}
+                      </p>
+                    </div>
+                    {/* Vertical divider between items */}
+                    {i < stats.length - 1 && (
+                      <img
+                        src="/images/stats-divider.svg"
+                        alt=""
+                        className="h-[83px] w-[1px]"
+                      />
+                    )}
                   </div>
-                  {/* Vertical divider between items */}
-                  {i < stats.length - 1 && (
-                    <img
-                      src="/images/stats-divider.svg"
-                      alt=""
-                      className="h-[83px] w-[1px]"
-                    />
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </Reveal>
         </div>
       </div>
+
+      {/* Scoped helper: gently scale the fixed-width stats row on small screens.
+          This does NOT change your inner styles or spacing; it only applies a transform. */}
+      <style jsx>{`
+        .stats-scale {
+          --sscale: 1;
+          transform: scale(var(--sscale));
+          transform-origin: center;
+          will-change: transform;
+        }
+        @media (max-width: 768px) {
+          .stats-scale { --sscale: 0.84; }
+        }
+        @media (max-width: 480px) {
+          .stats-scale { --sscale: 0.74; }
+        }
+      `}</style>
     </section>
   )
 }
