@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Stagger, Reveal, slideUp } from './animations'
+import { easeInOut } from 'framer-motion'
 
 /** Client-only randomized wobble on hover (no style changes to children) */
 function WobbleOnHover({ children }: { children: React.ReactNode }) {
@@ -17,7 +18,10 @@ function WobbleOnHover({ children }: { children: React.ReactNode }) {
   }, [])
 
   const animate = hover && amp != null ? { y: [0, -amp, 0, amp, 0] } : { y: 0 }
-  const transition = hover && dur != null ? { duration: dur, ease: 'easeInOut', repeat: Infinity } : undefined
+  const transition =
+  hover && dur != null
+    ? { duration: dur, ease: easeInOut, repeat: Infinity }
+    : undefined
 
   return (
     <motion.div
